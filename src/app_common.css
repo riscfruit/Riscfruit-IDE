@@ -8,14 +8,24 @@
 
 :root {
     --fg-color: white;
+    --fg-color-dim: #9aa4a9;
     --fg-color-highlight: orange;
-    --accent-color: #0a84ff;
-    --bg-color: #2a2e32;
-    --bg-color-menu: #2a2e32ee;
+
+    /* Riscfruit red - the role Arduino IDE gives to its teal/blue */
+    --accent-color: #d40000;
+    --accent-color-hover: #a80000;
+    --accent-color-text: #ff5c5c;      /* readable red for text/focus on dark backgrounds */
+
+    --bg-color: #d40000;
+    --bg-color-menu: #111314ee;
     --bg-color-edit: #111314;
-    --font-size: 14px;
-    --connected-passive: #87c244;
-    --connected-active: #0a84ff;
+    --bg-color-bar: #1a1d1f;           /* activity bar, tab strips, panel headers */
+    --border-color: #ffffff14;
+
+    --font-size: 16px;
+    /* Connection buttons sit on the red toolbar, so "passive" must not be red */
+    --connected-passive: #ffc9c9;
+    --connected-active: #ffffff;
     --connected-color: var(--connected-passive);
     --animation: 0.3s ease-in-out;
 }
@@ -96,7 +106,7 @@ p, hr { margin: revert; }
 /* Nothing here draws a default focus ring (buttons and links are unstyled),
    so keyboard navigation needs an explicit one. */
 :focus-visible {
-    outline: 2px solid var(--accent-color);
+    outline: 2px solid var(--accent-color-text);
     outline-offset: 1px;
 }
 
@@ -130,6 +140,7 @@ input[type="checkbox" i] {
     margin: 0 3px 0 0;
     vertical-align: -0.1em;
     cursor: pointer;
+    accent-color: var(--accent-color);
 }
 
 button {
@@ -238,7 +249,7 @@ input, select, option {
 }
 
 option {
-    background-color: var(--bg-color);
+    background-color: var(--bg-color-bar);
 }
 
 /*
@@ -257,19 +268,20 @@ option {
     font-family: system-ui,Ubuntu,Droid Sans,sans-serif;
 }
 
+/* Icon palette: no blue anywhere - the former blues are red/neutral now */
 .fa-power-off { color: #ffcc4d; }
 .fa-bug { color: #ffcc4d; }
-.fa-download { color: #87c244; }
-.fa-circle-play { color: #3b88c3; }
+.fa-download { color: #ffffff; }
+.fa-circle-play { color: #ff6b6b; }
 .fa-circle-stop { color: #ff7272; }
-.fa-circle-info { color: #3b88c3; }
-.fa-file { color: #3b88c3; }
+.fa-circle-info { color: #ff6b6b; }
+.fa-file { color: #c9d1d6; }
 .fa-file-circle-exclamation { color: #ed4337; }
 .fa-folder, .fa-folder-open { color: #ffcc4d; }
 .fa-certificate { color: #ba0311; }
 .fa-cube { color: #ba9066; }
 .fa-cubes { color: #ba9066; }
-.fa-gauge-high { color: #87c244; }
+.fa-gauge-high { color: #ffffff; }
 .fa-tools { color: #ccd6dd; }
 /*.fa-arrows-rotate { color: #3b88c3; }*/
 .fa-sliders { color: #ccd6dd }
