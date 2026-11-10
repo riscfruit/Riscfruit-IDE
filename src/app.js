@@ -1680,30 +1680,11 @@ export async function saveCurrentFile() {
    tab is closed. It has no file behind it on the device, so it is never saved
    and never reconciled against a board. */
 async function openWelcomeTab() {
-    const fn = 'ViperIDE.md'
+    const fn = 'README.md'
     const content = `
-# ViperIDE - MicroPython Web IDE
+# Riscfruit IDE
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/vshymanskyy/ViperIDE?style=flat-square&color=green)](https://github.com/vshymanskyy/ViperIDE/stargazers) 
-[![GitHub issues](https://img.shields.io/github/issues-raw/vshymanskyy/ViperIDE?style=flat-square&label=issues&color=green)](https://github.com/vshymanskyy/ViperIDE/issues) 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/vshymanskyy/ViperIDE) 
-[![Support vshymanskyy](https://img.shields.io/static/v1?style=flat-square&label=support&message=%E2%9D%A4&color=%23fe8e86)](https://gist.github.com/vshymanskyy/840e6fa41ea6b028b91b333b6e4542ed) 
-
-Connect your device and start creating! 🤖👨‍💻🕹️
-
-> **No device?**  
-> 👉 Open a [virtual device](${VIPER_IDE_BASE_URL}/?vm=1) and explore some examples.
-
-> **New board, no MicroPython on it yet?**  
-> 👉 Use the [Firmware Flasher](${VIPER_IDE_BASE_URL}/flasher.html) to install it.
-
-## More about ViperIDE
-
-- [README](https://github.com/vshymanskyy/ViperIDE/blob/main/README.md)
-- [Features and device support](https://github.com/vshymanskyy/ViperIDE/blob/main/docs/Features.md)
-- [Documentation](https://github.com/vshymanskyy/ViperIDE/tree/main/docs)
-- [Discussions](https://github.com/orgs/micropython/discussions?discussions_q=ViperIDE)
-- [![StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md) 
+Connect your device and start creating!
 
 `
     await _loadContent(fn, content, createTab(fn))
