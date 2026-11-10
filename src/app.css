@@ -8,6 +8,9 @@
 
 :root {
     --side-menu-width: 320px; /* 48px activity bar + 272px panel */
+    --toolbar-height: 70px;   /* header AND logo height */
+    --logo-ratio: 4.4;        /* desktop logo PNG width / height; tune if the logo looks short or leaves a gap */
+    --statusbar-height: 24px;
 }
 
 body {
@@ -28,21 +31,26 @@ body.loaded {
  * Arduino-IDE-style toolbar: a solid accent bar with round, white icon buttons
  */
 
+/* The logo is supplied by CSS (the HTML span is empty). Its height is exactly
+   the header height. A background image has no intrinsic size, so the desktop
+   width must be: --toolbar-height x (PNG width / PNG height). */
 .logo {
-    display: inline-flex;
-    align-items: center;
-    height: 70px;
-    margin: 0px 8px;
-    overflow: hidden;
+    display: block;
+    flex: 0 0 auto;
+    height: var(--toolbar-height);
+    width: calc(var(--toolbar-height) * var(--logo-ratio));
+    margin: 0 8px 0 0;
+    background: url("assets/riscfruitidelogo.png") left center / contain no-repeat;
 }
 
-.logo img {
-    display: block;
-    height: 100%;
-    width: auto;
-    max-width: 100%;
-    object-fit: contain;
-    object-position: left center;
+/* Mobile: swap to the square logo */
+@media (max-width: 768px) {
+    .logo {
+        width: var(--toolbar-height);
+        margin: 0 4px 0 0;
+        background-image: url("assets/logo_1024.png");
+        background-position: center;
+    }
 }
 
 #tool-panel {
@@ -51,8 +59,8 @@ body.loaded {
     justify-content: space-between;
     flex: 0 0 auto;
     gap: 8px;
-    min-height: 70px;
-    padding: 0px 10px;
+    height: var(--toolbar-height);
+    padding: 0 10px 0 0;   /* no left padding: the logo borders the left edge */
     background: var(--accent-color);
     box-shadow: 0 1px 0 #00000059, 0 2px 6px #00000040;
     position: relative;
@@ -65,6 +73,16 @@ body.loaded {
     align-items: center;
     gap: 4px;
     min-width: 0;
+    height: 100%;
+}
+
+/* Thin divider between toolbar button groups */
+.toolbar-sep {
+    flex: 0 0 auto;
+    width: 1px;
+    height: 28px;
+    margin: 0 6px;
+    background: #ffffff40;
 }
 
 #tool-panel button {
@@ -113,6 +131,39 @@ body.loaded {
     overflow: hidden;
     position: relative;
     background: var(--bg-color-edit);
+}
+
+/*
+ * Status bar (bottom), like Arduino IDE's
+ */
+
+#status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+    gap: 12px;
+    height: var(--statusbar-height);
+    padding: 0 12px;
+    background: var(--accent-color);
+    color: #fff;
+    font-size: 0.78rem;
+    box-shadow: 0 -1px 0 #00000059;
+    user-select: none;
+}
+
+#status-bar > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#status-bar i {
+    color: inherit;
 }
 
 /*
@@ -248,7 +299,7 @@ body.loaded {
  */
 
 #toast-container.toast-top-right {
-    top: 3.5rem;
+    top: calc(var(--toolbar-height) + 0.5rem);
 }
 
 #toast-container > div {
@@ -730,12 +781,22 @@ body.loaded {
     #editor-tabs {
         display: none;
     }
+
+    /* The status bar keeps only the connection state on small screens */
+    #status-bar-info {
+        display: none;
+    }
 }
 
-/* Narrow phones: keep the whole toolbar on one row */
+/* Narrow phones: keep the whole toolbar on one row. The logo follows
+   --toolbar-height, so it stays exactly as tall as the header. */
 @media (max-width: 480px) {
+    :root {
+        --toolbar-height: 56px;
+    }
+
     #tool-panel {
-        padding: 5px 6px;
+        padding: 0 6px 0 0;
         gap: 4px;
     }
 
@@ -749,9 +810,8 @@ body.loaded {
         gap: 2px;
     }
 
-    .logo {
-        max-width: 80px;
-        margin: 0 4px;
+    .toolbar-sep {
+        margin: 0 2px;
     }
 }
 

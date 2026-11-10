@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#d40000">
     <meta name="description" content="${VIPER_IDE_DESCR}">
     <meta property="og:description" content="${VIPER_IDE_DESCR}">
     <title>Riscfruit IDE</title>
@@ -14,7 +15,7 @@
     <noscript>
         <style>
             body { display: block; opacity: 1; }
-            #tool-panel, #container, #dpi-ruler { display: none; }
+            #tool-panel, #container, #status-bar, #dpi-ruler { display: none; }
         </style>
     </noscript>
 </head>
@@ -26,18 +27,19 @@
     </noscript>
     <div id="tool-panel">
         <div>
-            <button onclick="app.toggleSideMenu()"><i class="fa-solid fa-bars"></i></button>
-            <span class="logo">
-                <img src="assets/riscfruitidelogo.png" alt="Riscfruit IDE logo">
-            </span>
+            <!-- The logo image is supplied by app.css (and switches on mobile) -->
+            <span class="logo" role="img" aria-label="Riscfruit IDE logo"></span>
 
             <button title="Save File [Ctrl+S]"   onclick="app.saveCurrentFile()" id="btn-save"><i class="fa-solid fa-download"></i></button>
             <button title="Run File [F5]"        onclick="app.runCurrentFile()"  id="btn-run"><i class="fa-solid fa-circle-play" id="btn-run-icon"></i></button>
+            <span class="toolbar-sep" aria-hidden="true"></span>
+            <button title="Toggle Sidebar" onclick="app.toggleSideMenu()"><i class="fa-solid fa-bars"></i></button>
         </div>
         <div>
             <button title="Connect WebREPL"      onclick="app.connectDevice('ws')"  id="btn-conn-ws" ><i class="fa-solid fa-link"></i></button>
             <button title="Connect Bluetooth"    onclick="app.connectDevice('ble')" id="btn-conn-ble"><i class="fa-brands fa-bluetooth-b"></i></button>
             <button title="Connect USB/Serial"   onclick="app.connectDevice('usb')" id="btn-conn-usb"><i class="fa-brands fa-usb"></i></button>
+            <span class="toolbar-sep" aria-hidden="true"></span>
             <button title="Full Screen" onclick="app.toggleFullScreen('app')"  id="app-expand"><i class="fa-solid fa-expand"></i></button>
         </div>
     </div>
@@ -46,13 +48,13 @@
         <div id="side-menu">
             <div class="tabs" id="menu-tabs">
                 <div>
-                    <a class="tab active" data-target="menu-files"><i class="fa-solid fa-folder fa-fw"></i></a>
-                    <a class="tab" data-target="menu-pkg" onclick="app.loadAllPkgIndexes();return false;"><i class="fa-solid fa-cubes fa-fw"></i></a>
-                    <a class="tab" data-target="menu-tools"><i class="fa-solid fa-tools fa-fw"></i></a>
+                    <a class="tab active" data-target="menu-files" title="File Manager"><i class="fa-solid fa-folder fa-fw"></i></a>
+                    <a class="tab" data-target="menu-pkg" title="Package Manager" onclick="app.loadAllPkgIndexes();return false;"><i class="fa-solid fa-cubes fa-fw"></i></a>
+                    <a class="tab" data-target="menu-tools" title="Tools"><i class="fa-solid fa-tools fa-fw"></i></a>
                 </div>
                 <div>
-                    <a class="tab" data-target="menu-settings"><i class="fa-solid fa-sliders fa-fw"></i></a>
-                    <a class="tab" data-target="menu-about"><i class="fa-solid fa-circle-info fa-fw"></i></a>
+                    <a class="tab" data-target="menu-settings" title="Settings"><i class="fa-solid fa-sliders fa-fw"></i></a>
+                    <a class="tab" data-target="menu-about" title="About"><i class="fa-solid fa-circle-info fa-fw"></i></a>
                     <!--button onclick="TODO"><i class="fa-regular fa-message fa-fw"></i></button>
                     <button onclick="TODO"><i class="fa-regular fa-star fa-fw"></i></button-->
                 </div>
@@ -126,7 +128,7 @@
                             <!-- Indo-European Languages -->
                             <option value="en">🇺🇸🇬🇧 English</option>
                             <option value="zh-CN">🇨🇳 中文</option>
-			                <option value="tr">🇹🇷 Türkçe</option>
+                            <option value="tr">🇹🇷 Türkçe</option>
                         </select>
                     </div>
                     <div class="space-between">
@@ -183,8 +185,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Arduino-style status bar: connection state on the left, app name on the right -->
+    <div id="status-bar">
+        <span id="status-conn"><i class="fa-solid fa-plug fa-fw"></i> <span id="status-conn-text">Not connected</span></span>
+        <span id="status-bar-info">Riscfruit IDE</span>
+    </div>
+
     <div id="dpi-ruler" style="position:absolute;height:1in;width:1in;left:-100%;top:-100%;"></div>
 
     <script src="./app.js"></script>
+    <script>
+        // Keeps the status bar in sync by watching the connect buttons' classes;
+        // it never touches app.js internals.
+        (function () {
+            var names = {
+                'btn-conn-ws':  'WebREPL',
+                'btn-conn-ble': 'Bluetooth',
+                'btn-conn-usb': 'USB/Serial'
+            };
+            var out = document.getElementById('status-conn-text');
+            function update() {
+                var text = 'Not connected';
+                for (var id in names) {
+                    var b = document.getElementById(id);
+                    if (!b) continue;
+                    if (b.classList.contains('connected'))    { text = 'Connected via ' + names[id]; break; }
+                    if (b.classList.contains('reconnecting')) { text = 'Reconnecting (' + names[id] + ')\u2026'; break; }
+                }
+                out.textContent = text;
+            }
+            var obs = new MutationObserver(update);
+            for (var id in names) {
+                var b = document.getElementById(id);
+                if (b) obs.observe(b, { attributes: true, attributeFilter: ['class'] });
+            }
+            update();
+        })();
+    </script>
 </body>
 </html>
