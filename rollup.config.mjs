@@ -54,7 +54,7 @@ const stripMicroPythonNodeCli = () => ({
   },
 })
 
-copyHtml('src/ViperIDE.html',  'build/index.html')
+copyHtml('src/ide.html',  'build/index.html')
 copyHtml('src/benchmark.html', 'build/benchmark.html')
 copyHtml('src/bridge.html',    'build/bridge.html')
 copyHtml('src/flasher.html',   'build/flasher.html')

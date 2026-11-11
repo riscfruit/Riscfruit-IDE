@@ -30,17 +30,20 @@
             <!-- The logo image is supplied by app.css (and switches on mobile) -->
             <span class="logo" role="img" aria-label="Riscfruit IDE logo"></span>
 
-            <button title="Save File [Ctrl+S]"   onclick="app.saveCurrentFile()" id="btn-save"><i class="fa-solid fa-download"></i></button>
+            <!-- Hamburger: only shown on mobile, where the sidebar is a slide-over -->
+            <button class="menu-toggle" title="Toggle Sidebar" onclick="app.toggleSideMenu()"><i class="fa-solid fa-bars"></i></button>
+            <!-- Same order as Arduino IDE: Verify, Upload (Run), New, Save -->
+            <button title="Verify"               onclick="app.verifyCurrentFile()" id="btn-verify"><i class="fa-solid fa-check"></i></button>
             <button title="Run File [F5]"        onclick="app.runCurrentFile()"  id="btn-run"><i class="fa-solid fa-circle-play" id="btn-run-icon"></i></button>
-            <span class="toolbar-sep" aria-hidden="true"></span>
-            <button title="Toggle Sidebar" onclick="app.toggleSideMenu()"><i class="fa-solid fa-bars"></i></button>
+            <button title="New File"             onclick="app.newFile()"         id="btn-new"><i class="fa-solid fa-file"></i></button>
+            <button title="Save File [Ctrl+S]"   onclick="app.saveCurrentFile()" id="btn-save"><i class="fa-solid fa-download"></i></button>
         </div>
         <div>
             <button title="Connect WebREPL"      onclick="app.connectDevice('ws')"  id="btn-conn-ws" ><i class="fa-solid fa-link"></i></button>
             <button title="Connect Bluetooth"    onclick="app.connectDevice('ble')" id="btn-conn-ble"><i class="fa-brands fa-bluetooth-b"></i></button>
             <button title="Connect USB/Serial"   onclick="app.connectDevice('usb')" id="btn-conn-usb"><i class="fa-brands fa-usb"></i></button>
-            <span class="toolbar-sep" aria-hidden="true"></span>
-            <button title="Full Screen" onclick="app.toggleFullScreen('app')"  id="app-expand"><i class="fa-solid fa-expand"></i></button>
+            <!--<span class="toolbar-sep" aria-hidden="true"></span>-->
+            <!--<button title="Full Screen" onclick="app.toggleFullScreen('app')"  id="app-expand"><i class="fa-solid fa-expand"></i></button>-->
         </div>
     </div>
     <div id="container">
@@ -55,8 +58,6 @@
                 <div>
                     <a class="tab" data-target="menu-settings" title="Settings"><i class="fa-solid fa-sliders fa-fw"></i></a>
                     <a class="tab" data-target="menu-about" title="About"><i class="fa-solid fa-circle-info fa-fw"></i></a>
-                    <!--button onclick="TODO"><i class="fa-regular fa-message fa-fw"></i></button>
-                    <button onclick="TODO"><i class="fa-regular fa-star fa-fw"></i></button-->
                 </div>
             </div>
 
@@ -98,12 +99,6 @@
                     <div><a href="#" onclick="app.pyMinify()" id="py-minify">🤏 Minify current file</a></div>
                     <div><a href="#" onclick="app.saveAndCompile()" id="py-save-compile">🛠️ Save &amp; compile to .mpy</a></div>
                     <div><a href="#" onclick="app.showDisassembly()" id="py-disassemble">🔍 Show disassembly</a></div>
-
-                    <!--div><a href="#" onclick="TODO()" id="download-all">📥 Download all files</a></div>
-                    <div><a href="#" onclick="TODO()" id="publish">🚀 Publish on ViperIDE</a></div>
-
-                    <div class="title-lines" id="menu-tools-blynk">Blynk IoT</div>
-                    <div><a href="#" onclick="TODO()" id="blynk-ota-package">📦 Generate OTA package</a></div-->
                 </div>
             </div>
             <div id="menu-settings" class="tab-content">
@@ -145,7 +140,6 @@
                 </div>
             </div>
             <div id="menu-about" class="tab-content">
-                <a class="github-fork-ribbon left-top" href="https://github.com/vshymanskyy/ViperIDE" target="_blank" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
                 <div class="about-header">
                     <img class="about-logo" src="assets/logo_1024.png" alt="Logo">
                     <div class="about-title">Riscfruit IDE</div>
@@ -167,7 +161,6 @@
                 <div class="tabs" id="terminal-tabs" onmousedown="app.initDrag(event)" ontouchstart="app.initDrag(event)">
                     <div>
                         <a class="tab active" data-target="xterm"><i class="fa-solid fa-terminal"></i> <span id="tab-term">Terminal</span></a>
-                        <!--a class="tab"        data-target="logs"><i class="fa-solid fa-bug"></i> IDE Logs</a-->
                     </div>
                     <div>
                         <button title="Clear" onclick="app.clearTerminal()" id="term-clear"><i class="fa-solid fa-trash-can"></i></button>
@@ -186,42 +179,15 @@
         </div>
     </div>
 
-    <!-- Arduino-style status bar: connection state on the left, app name on the right -->
+    <!-- Arduino-style status bar: cursor line on the left, device on the right.
+         Both are filled in by app.js. -->
     <div id="status-bar">
+        <span id="status-line" title="Line"></span>
         <span id="status-conn"><i class="fa-solid fa-plug fa-fw"></i> <span id="status-conn-text">Not connected</span></span>
-        <span id="status-bar-info">Riscfruit IDE</span>
     </div>
 
     <div id="dpi-ruler" style="position:absolute;height:1in;width:1in;left:-100%;top:-100%;"></div>
 
     <script src="./app.js"></script>
-    <script>
-        // Keeps the status bar in sync by watching the connect buttons' classes;
-        // it never touches app.js internals.
-        (function () {
-            var names = {
-                'btn-conn-ws':  'WebREPL',
-                'btn-conn-ble': 'Bluetooth',
-                'btn-conn-usb': 'USB/Serial'
-            };
-            var out = document.getElementById('status-conn-text');
-            function update() {
-                var text = 'Not connected';
-                for (var id in names) {
-                    var b = document.getElementById(id);
-                    if (!b) continue;
-                    if (b.classList.contains('connected'))    { text = 'Connected via ' + names[id]; break; }
-                    if (b.classList.contains('reconnecting')) { text = 'Reconnecting (' + names[id] + ')\u2026'; break; }
-                }
-                out.textContent = text;
-            }
-            var obs = new MutationObserver(update);
-            for (var id in names) {
-                var b = document.getElementById(id);
-                if (b) obs.observe(b, { attributes: true, attributeFilter: ['class'] });
-            }
-            update();
-        })();
-    </script>
 </body>
 </html>

@@ -8,7 +8,6 @@
 
 import '@xterm/xterm/css/xterm.css'
 import 'toastr/build/toastr.css'
-import 'github-fork-ribbon-css/gh-fork-ribbon.css'
 import './app_common.css'
 import './app.css'
 
@@ -51,7 +50,7 @@ import { initControlClient } from './control_client.js'
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
 import { faUsb, faBluetoothB } from '@fortawesome/free-brands-svg-icons'
-import { faLink, faBars, faDownload, faCirclePlay, faCircleStop, faFolder, faFile, faFileCircleExclamation, faCubes, faGear,
+import { faLink, faBars, faDownload, faCheck, faCirclePlay, faCircleStop, faFolder, faFile, faFileCircleExclamation, faCubes, faGear,
          faCube, faTools, faSliders, faCircleInfo, faStar, faExpand, faCertificate,
          faPlug, faArrowUpRightFromSquare, faTerminal, faBug, faGaugeHigh,
          faTrashCan, faArrowsRotate, faPowerOff, faPlus, faXmark,
@@ -60,7 +59,7 @@ import { faLink, faBars, faDownload, faCirclePlay, faCircleStop, faFolder, faFil
 import { faMessage, faCircleDown } from '@fortawesome/free-regular-svg-icons'
 
 library.add(faUsb, faBluetoothB)
-library.add(faLink, faBars, faDownload, faCirclePlay, faCircleStop, faFolder, faFile, faFileCircleExclamation, faCubes, faGear,
+library.add(faLink, faBars, faDownload, faCheck, faCirclePlay, faCircleStop, faFolder, faFile, faFileCircleExclamation, faCubes, faGear,
          faCube, faTools, faSliders, faCircleInfo, faStar, faExpand, faCertificate,
          faPlug, faArrowUpRightFromSquare, faTerminal, faBug, faGaugeHigh,
          faTrashCan, faArrowsRotate, faPowerOff, faPlus, faXmark,
@@ -155,6 +154,46 @@ function updateDeviceUI() {
     for (const id of ['btn-reset-soft', 'btn-reset-hard']) {
         QID(id).disabled = (deviceState === 'reconnecting')
     }
+
+    updateStatusBar()
+}
+
+/*
+ * Arduino-style status bar. Everything about the device sits on the right
+ * ("<board> on <port>"); the left side shows the cursor line.
+ */
+const CONN_LABELS = { ws: 'WebREPL', ble: 'Bluetooth', usb: 'USB/Serial' }
+
+function updateStatusBar() {
+    const el = QID('status-conn-text')
+    const label = CONN_LABELS[connType] || ''
+    let text = 'Not connected'
+    let tip = ''
+
+    if (deviceState === 'reconnecting') {
+        text = `Reconnecting (${label})\u2026`
+    } else if (deviceState !== 'disconnected') {
+        text = devInfo?.machine ? `${devInfo.machine} on ${label}` : `Connected via ${label}`
+        if (isInRunMode) {
+            text += ' (running)'
+        } else if (isBusyState()) {
+            text += ' (busy)'
+        }
+        tip = devInfo ? `${devInfo.machine}\n${devInfo.version}` : ''
+    }
+
+    el.textContent = text
+    el.parentElement.title = tip
+}
+
+function showCursorLine(view) {
+    const el = QID('status-line')
+    if (!view) {
+        el.textContent = ''
+        return
+    }
+    const state = view.state
+    el.textContent = state.doc.lineAt(state.selection.main.head).number
 }
 
 function setDeviceState(newState) {
@@ -1315,6 +1354,36 @@ export async function pyPrettify() {
     analytics.track('Run Ruff Format')
 }
 
+/* Arduino's "Verify": checks the open Python file without touching the device */
+export async function verifyCurrentFile() {
+    if (!editor || !editorFn.endsWith('.py')) {
+        toastr.info('Please open a Python file')
+        return
+    }
+    if (!devInfo) {
+        toastr.info('Connect your device first')
+        return
+    }
+
+    const backtrace = await validatePython(editorFn, editor.state.doc.toString(), devInfo)
+    if (backtrace) {
+        console.log(backtrace)
+        toastr.error(sanitizeHTML(backtrace.summary), backtrace.type)
+    } else {
+        toastr.success('Done verifying.')
+    }
+    analytics.track('File Verified')
+}
+
+/* Arduino's "New": a file in the device's root folder */
+export async function newFile() {
+    if (!portReady()) {
+        toastr.info('Connect your device first')
+        return
+    }
+    await createNewFile('/')
+}
+
 /* Saves the source as usual, then cross-compiles the same content and stores
    the resulting .mpy alongside it - two writes, so the source on the device
    always matches what was compiled. */
@@ -1580,10 +1649,12 @@ async function _loadContent(fn, content, editorElement, { external=null } = {}) 
         hexViewer(content.buffer, editorElement)
         fsCache.openView(tabFn, { baseline: '', kind: 'hex', readOnly: true })
         editor = null
+        showCursorLine(null)
     } else if (fn.endsWith('.md') && getSetting('render-markdown')) {
         editorElement.innerHTML = renderMarkdown(content, { external })
         fsCache.openView(tabFn, { baseline: content, kind: 'markdown', readOnly: true })
         editor = null
+        showCursorLine(null)
     } else {
         let readOnly = false
         if (fn.endsWith('.json') && getSetting('expand-minify-json')) {
@@ -1613,7 +1684,11 @@ async function _loadContent(fn, content, editorElement, { external=null } = {}) 
         document.dispatchEvent(new CustomEvent("editorLoaded", {detail: {editor: editor, fn: fn}}))
 
         const scheduleSync = makeCoalesced(1000)
+        showCursorLine(editor)
         addUpdateHandler(editor, (update) => {
+            if (update.selectionSet || update.docChanged) {
+                if (!update.view || update.view === editor) { showCursorLine(update.view || editor) }
+            }
             if (!update.docChanged) return
             // The tab knows the current name; this one goes stale on a move
             const key = getTabFileName(editorElement) || tabFn
@@ -2315,6 +2390,10 @@ function showOfflineReadyToast(version) {
     setupTabs(QID('terminal-container'))
 
     toastr.options.preventDuplicates = true;
+    toastr.options.showDuration = 0
+    toastr.options.hideDuration = 0
+    toastr.options.showMethod = 'show'
+    toastr.options.hideMethod = 'hide'
 
     if (!urlParams.get('vm')) {
         await openWelcomeTab()
@@ -2322,7 +2401,7 @@ function showOfflineReadyToast(version) {
 
     const xtermTheme = {
         foreground: '#F8F8F8',
-        background: getCssPropertyValue('--bg-color-edit'),
+        background: '#000000',   // Arduino's console is plain black
         selection: '#5DA5D533',
         black: '#1E1E1D',
         brightBlack: '#262625',
@@ -2346,7 +2425,7 @@ function showOfflineReadyToast(version) {
         fontFamily: '"Hack", "Droid Sans Mono", "monospace", monospace',
         fontSize: (14 * 0.9).toFixed(1),
         theme: xtermTheme,
-        cursorBlink: true,
+        cursorBlink: false,
         convertEol: true,
         allowProposedApi: true,
     })
@@ -2454,6 +2533,8 @@ function showOfflineReadyToast(version) {
         fileTreeSelect(event.detail.fn)
         editor = getEditorFromElement(event.detail.editorElement)
         editorFn = event.detail.fn
+        showCursorLine(editor)
+        document.title = `${event.detail.fn.split('/').pop()} - Riscfruit IDE`
         markFile(event.detail.fn, 'open', true)
     })
     document.addEventListener("tabClosed", (event) => {
