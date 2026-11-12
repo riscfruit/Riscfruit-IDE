@@ -8,21 +8,19 @@
     --fg-color-dim: #9aa4a9;
     --fg-color-highlight: orange;
 
-    /* Riscfruit red - the role Arduino IDE gives to its teal/blue */
-    --accent-color: #d40000;
-    --accent-color-hover: #a80000;
-    --accent-color-text: #ff5c5c;      /* readable red for text/focus on dark backgrounds */
+    --accent-color: #6C3483;
+    --accent-color-hover: #6C3483;
+    --accent-color-text: #BB86FC;
 
-    --bg-color: #d40000;
-    --bg-color-menu: #111314ee;
-    --bg-color-edit: #111314;
-    --bg-color-bar: #1a1d1f;           /* activity bar, tab strips, panel headers */
-    --border-color: #ffffff14;
+    --bg-color: #9B59B6;
+    --bg-color-menu: #19171D;
+    --bg-color-edit: #111114;
+    --bg-color-bar: #211B26;
 
-    --font-size: 16px;
-    /* Connection buttons sit on the red toolbar, so "passive" must not be red */
-    --connected-passive: #ffc9c9;
+    --connected-passive: #ead8ff;
     --connected-active: #ffffff;
+    --font-size: 16px;
+   
     --connected-color: var(--connected-passive);
     --animation: 0.3s ease-in-out;
 }

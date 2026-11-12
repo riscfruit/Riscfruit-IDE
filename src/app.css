@@ -114,11 +114,11 @@ body.loaded {
 }
 
 #tool-panel button:hover:not(:disabled) {
-    background: #fff;
+    background: var(--connected-active);
 }
 
 #tool-panel button:active:not(:disabled) {
-    background: #ffe3e3;
+    background: var(--connected-passive);
 }
 
 /* Connected: same disc, but the icon colour pulses between --connected-passive
